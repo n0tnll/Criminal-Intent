@@ -23,10 +23,15 @@ private const val TAG = "CrimeListFragment"
 class CrimeListFragment : Fragment() {
 
     private lateinit var crimeRecyclerView: RecyclerView
-    private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())
+    private var adapter: CrimeAdapter? = null
 
     private val crimeListViewModel: CrimeListViewModel by lazy {
         ViewModelProvider(this).get(CrimeListViewModel::class.java)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.i(TAG, "Total crimes: ${crimeListViewModel.crimes.size}")
     }
 
     override fun onCreateView(
@@ -38,24 +43,12 @@ class CrimeListFragment : Fragment() {
 
         crimeRecyclerView = view.findViewById(R.id.crime_recycle_view) as RecyclerView
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
-        crimeRecyclerView.adapter = adapter
+        updateUI()
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        crimeListViewModel.crimesListLiveData.observe(
-            viewLifecycleOwner,
-            androidx.lifecycle.Observer { crimes ->
-                crimes?.let {
-                    Log.i(TAG, "Got crimes ${crimes.size}")
-                    updateUI(crimes)
-                }
-            }
-        )
-    }
-
-    private fun updateUI(crimes: List<Crime>) {
+    private fun updateUI() {
+        val crimes = crimeListViewModel.crimes
         adapter = CrimeAdapter(crimes)
         crimeRecyclerView.adapter = adapter
     }
@@ -94,18 +87,17 @@ class CrimeListFragment : Fragment() {
     private inner class CrimeAdapter(var crimes: List<Crime>) :
         RecyclerView.Adapter<CrimeHolder>() {
 
-//        override fun getItemViewType(position: Int): Int {
-//            val viewType = crimes[position].requiresPolice
-//            Log.d(TAG, "ItemViewType #${crimes[position]} = $viewType")
-//            return viewType
-//        }
+        override fun getItemViewType(position: Int): Int {
+            val viewType = crimes[position].requiresPolice
+            Log.d(TAG, "ItemViewType #${crimes[position]} = $viewType")
+            return viewType
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CrimeHolder {
-//            val view = when(viewType) {
-//                0 -> layoutInflater.inflate(R.layout.list_item_crime, parent, false)
-//                else -> layoutInflater.inflate(R.layout.list_item_crime_police, parent, false)
-//            }
-            val view = layoutInflater.inflate(R.layout.list_item_crime, parent, false)
+            val view = when(viewType) {
+                0 -> layoutInflater.inflate(R.layout.list_item_crime, parent, false)
+                else -> layoutInflater.inflate(R.layout.list_item_crime_police, parent, false)
+            }
             return CrimeHolder(view)
         }
 
